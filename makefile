@@ -10,6 +10,11 @@ firefox-%/js/src/Makefile: firefox-%
 	cd $</js/src/ && ./configure --enable-optimize
 
 
-libmozjs-%.so: firefox-% firefox-%/js/src/Makefile
+.PHONY: libmozjs-%
+libmozjs-%: firefox-% firefox-%/js/src/Makefile
 	cd $</js/src/ && $(MAKE)
-	cp $</js/src/js/src/libmozjs-*.so $@
+
+
+.PHONY: install-%
+install-%: firefox-% libmozjs-%
+	cd $</js/src/ && $(MAKE) install
