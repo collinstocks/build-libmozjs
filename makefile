@@ -30,7 +30,7 @@ firefox-%/js/src/Makefile: firefox-%
 
 .PHONY: libmozjs-%
 libmozjs-%: firefox-% firefox-%/js/src/Makefile
-	cd $</js/src/ && $(MAKE) install prefix=$(realpath .)
+	cd $</js/src/ && $(MAKE) && $(MAKE) install prefix=$(realpath .)
 
 
 .PHONY: install-%
