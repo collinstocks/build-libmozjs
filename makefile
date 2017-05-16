@@ -1,45 +1,29 @@
-.PHONY: default
-ifdef version
-default: .check-env libmozjs-$(version)
-else
-default:
-	$(error version is undefined)
+ifndef version
+$(error version is undefined)
 endif
+
+
+FIREFOX_SRC_URL:=https://archive.mozilla.org/pub/firefox/releases/$(version)/source/firefox-$(version).source.tar.xz
+JS_SRC_DIR:=firefox-$(version)/js/src
+
+
+.PHONY: default
+default: $(JS_SRC_DIR)/Makefile
+	cd "$(JS_SRC_DIR)" && $(MAKE) && $(MAKE) install "prefix=$(realpath .)"
 
 
 .PHONY: install
-ifdef version
-install: .check-env install-$(version)
-else
-install:
-	$(error version is undefined)
-endif
+install: $(JS_SRC_DIR)/Makefile
+	cd "$(JS_SRC_DIR)" && $(MAKE) install
 
 
-firefox-%.source.tar.xz:
-	wget "https://archive.mozilla.org/pub/firefox/releases/$(patsubst firefox-%.source.tar.xz,%,$@)/source/$@" -O "$@" || rm "$@"
+firefox-$(version).source.tar.xz:
+	wget "$(FIREFOX_SRC_URL)" -O "$@" && touch "$@"
 
 
-firefox-%: firefox-%.source.tar.xz
-	tar xvJf $<
+$(JS_SRC_DIR)/configure: firefox-$(version).source.tar.xz
+	tar xvJf "$<" && touch "$@"
 
 
-firefox-%/js/src/Makefile: firefox-%
-	cd $</js/src/ && ./configure --enable-optimize
-
-
-.PHONY: libmozjs-%
-libmozjs-%: firefox-% firefox-%/js/src/Makefile
-	cd $</js/src/ && $(MAKE) && $(MAKE) install prefix=$(realpath .)
-
-
-.PHONY: install-%
-install-%: firefox-% libmozjs-%
-	cd $</js/src/ && $(MAKE) install
-
-
-.PHONY: .check-env
-.check-env:
-ifndef version
-	$(error version is undefined)
-endif
+$(JS_SRC_DIR)/Makefile: $(JS_SRC_DIR)/configure
+	cd "$(JS_SRC_DIR)" && ./configure --enable-optimize
